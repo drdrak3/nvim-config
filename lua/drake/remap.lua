@@ -24,6 +24,9 @@ vim.keymap.set("n", "<Down>", "<nop>", {})
 vim.keymap.set("n", "<Left>", "<nop>", {})
 vim.keymap.set("n", "<Right>", "<nop>", {})
 
+vim.keymap.set("n", "<Tab>", "<cmd>bn<CR>", { desc = "Next Buffer" })
+vim.keymap.set("n", "<C-Tab>", "<cmd>bp<CR>", { desc = "Previous Buffer" })
+
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
