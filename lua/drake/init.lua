@@ -14,7 +14,7 @@ if not vim.loop.fs_stat(lazypath) then
     'clone',
     '--filter=blob:none',
     'https://github.com/folke/lazy.nvim.git',
-    '--branch=stable',     -- latest stable release
+    '--branch=stable', -- latest stable release
     lazypath,
   }
 end
@@ -178,7 +178,7 @@ require('lazy').setup({
           border = {},
           borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
           color_devicons = true,
-          set_env = { ["COLORTERM"] = "truecolor" },           -- default = nil,
+          set_env = { ["COLORTERM"] = "truecolor" }, -- default = nil,
           file_previewer = require("telescope.previewers").vim_buffer_cat.new,
           grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
           qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
@@ -295,9 +295,7 @@ require('lazy').setup({
         },
       }
 
-      vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeOpen<cr><cmd>NvimTreeFocus<cr>',
-        { desc = "Jump to File Tree" })
-      vim.keymap.set('n', '<C-n>', '<cmd>NvimTreeToggle<cr>', { desc = "Toggle Files" })
+      vim.keymap.set('n', '<leader>ft', '<cmd>NvimTreeToggle<cr>', { desc = "[F]ile [T]ree" })
     end
   },
 
@@ -417,7 +415,7 @@ require('nvim-treesitter.configs').setup {
   textobjects = {
     select = {
       enable = true,
-      lookahead = true,       -- Automatically jump forward to textobj, similar to targets.vim
+      lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
       keymaps = {
         -- You can use the capture groups defined in textobjects.scm
         ['aa'] = '@parameter.outer',
@@ -430,7 +428,7 @@ require('nvim-treesitter.configs').setup {
     },
     move = {
       enable = true,
-      set_jumps = true,       -- whether to set jumps in the jumplist
+      set_jumps = true, -- whether to set jumps in the jumplist
       goto_next_start = {
         [']m'] = '@function.outer',
         [']]'] = '@class.outer',
