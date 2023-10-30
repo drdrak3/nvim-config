@@ -70,5 +70,7 @@ return {
         })
       end,
     })
+
+    vim.keymap.set("n", "<leader>pf", "<cmd>KickstartFormatToggle<cr>", {})
   end,
 }

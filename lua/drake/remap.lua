@@ -49,8 +49,8 @@ vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
 vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz", { desc = "[K] List Next Warning" })
 vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz", { desc = "[J] List Previous Warning" })
 
-vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]],
-  { desc = "[S]ubstitute Word Under Cursor" })
+vim.keymap.set("n", "<leader>rs", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]],
+  { desc = "[R]eplace Word Under Cur[S]or" })
 vim.keymap.set("n", "<leader>fx", "<cmd>!chmod +x %<CR>", { silent = true, desc = "[F]ile e[X]ecutable" })
 
 vim.keymap.set({ "n", "v", "t" }, "<C-q>", "<cmd>confirm qa<cr>", {})
