@@ -33,6 +33,8 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 vim.keymap.set("n", "J", "mzJ`z")
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
+vim.keymap.set("n", "<PageDown>", "<C-d>zz")
+vim.keymap.set("n", "<PageUp>", "<C-u>zz")
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
@@ -62,3 +64,6 @@ vim.keymap.set("n", "<leader>bc", function()
     vim.cmd("confirm enew")
   end
 end, { desc = "[B]uffer [C]lose" })
+
+vim.keymap.set("n", "<leader>tn", "<cmd>terminal<cr>", { desc = "[T]erminal [N]ew" })
+vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", { desc = "Terminal Escape" })
