@@ -4,7 +4,7 @@ return {
     'ggandor/leap.nvim',
     'tpope/vim-repeat',
   },
-  config = function ()
+  config = function()
     require('flit').setup()
-  end
+  end,
 }
