@@ -5,8 +5,6 @@ vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
   command = [[%s/\s\+$//e]],
 })
 
-vim.opt.guicursor = ''
-
 vim.opt.nu = true
 vim.opt.relativenumber = true
 

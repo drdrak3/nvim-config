@@ -39,4 +39,6 @@ vim.keymap.set('n', '<leader>tn', '<cmd>terminal<cr>', { desc = '[T]erminal [N]e
 
 vim.keymap.set('n', '<leader>gs', '<cmd>Telescope git_status<cr>', { desc = '[G]it [S]tatus' })
 vim.keymap.set('n', '<leader>gb', '<cmd>Telescope git_branches<cr>', { desc = '[G]it [B]ranches' })
--- vim.keymap.set('n', '<leader>gm', package.loaded.gitsigns.blame_line, { desc = '[G]it [B]lame Line' })
+vim.keymap.set('n', '<leader>gm', package.loaded.gitsigns.blame_line, { desc = '[G]it [B]lame Line' })
+
+vim.keymap.set('n', '<Tab>', '<cmd>bn<CR>', { desc = 'Next Buffer' })
