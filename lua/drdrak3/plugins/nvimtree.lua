@@ -13,10 +13,10 @@ return {
     vim.g.loaded_netrwPlugin = 1
     vim.opt.termguicolors = true
 
-    require('nvim-tree').setup {
+    require('nvim-tree').setup({
       filters = {
         dotfiles = false,
-        exclude = { vim.fn.stdpath 'config' .. '/lua/custom' },
+        exclude = { vim.fn.stdpath('config') .. '/lua/custom' },
       },
       disable_netrw = true,
       hijack_netrw = true,
@@ -87,7 +87,7 @@ return {
           },
         },
       },
-    }
+    })
 
     vim.keymap.set('n', '<leader>ft', '<cmd>NvimTreeToggle<cr>', { desc = '[F]ile [T]ree' })
   end,

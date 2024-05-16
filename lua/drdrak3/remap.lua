@@ -22,18 +22,24 @@ vim.keymap.set('n', '<C-j>', '<cmd>cprev<CR>zz')
 vim.keymap.set('n', '<leader>k', '<cmd>lnext<CR>zz', { desc = '[K] List Next Warning' })
 vim.keymap.set('n', '<leader>j', '<cmd>lprev<CR>zz', { desc = '[J] List Previous Warning' })
 
-vim.keymap.set('n', '<leader>rs', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = '[R]eplace Word Under Cur[S]or' })
+vim.keymap.set(
+  'n',
+  '<leader>rs',
+  [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]],
+  { desc = '[R]eplace Word Under Cur[S]or' }
+)
 vim.keymap.set('n', '<leader>fx', '<cmd>!chmod +x %<CR>', { silent = true, desc = '[F]ile e[X]ecutable' })
 
 vim.keymap.set({ 'n', 'v', 't' }, '<C-q>', '<cmd>confirm qa<cr>', {})
 vim.keymap.set('n', '<leader>bc', function()
-  vim.cmd 'set bufhidden=delete'
+  vim.cmd('set bufhidden=delete')
   local bufid = vim.api.nvim_get_current_buf()
-  vim.cmd 'confirm bp'
+  vim.cmd('confirm bp')
   if bufid == vim.api.nvim_get_current_buf() then
-    vim.cmd 'confirm enew'
+    vim.cmd('confirm enew')
   end
 end, { desc = '[B]uffer [C]lose' })
+vim.keymap.set('n', '<leader>bn', '<cmd>confirm enew<cr>', { desc = '[B]uffer [N]ew' })
 
 vim.keymap.set('n', '<leader>tn', '<cmd>terminal<cr>', { desc = '[T]erminal [N]ew' })
 
