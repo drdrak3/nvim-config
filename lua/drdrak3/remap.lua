@@ -17,6 +17,7 @@ vim.keymap.set('v', '<leader>d', [["_d]], { desc = '[D]elete (Keep Clipboard)' }
 vim.keymap.set('n', 'Q', '<nop>')
 vim.keymap.set('n', '<leader>bf', vim.lsp.buf.format, { desc = '[B]uffer [F]ormat' })
 
+vim.keymap.set('n', '<C-f>', '<cmd>cclose<CR>')
 vim.keymap.set('n', '<C-k>', '<cmd>cnext<CR>zz')
 vim.keymap.set('n', '<C-j>', '<cmd>cprev<CR>zz')
 vim.keymap.set('n', '<leader>k', '<cmd>lnext<CR>zz', { desc = '[K] List Next Warning' })
@@ -47,5 +48,7 @@ vim.keymap.set('n', '<leader>gs', '<cmd>Telescope git_status<cr>', { desc = '[G]
 vim.keymap.set('n', '<leader>gb', '<cmd>Telescope git_branches<cr>', { desc = '[G]it [B]ranches' })
 vim.keymap.set('n', '<leader>gc', '<cmd>Telescope git_commits<cr>', { desc = '[G]it [C]ommits' })
 vim.keymap.set('n', '<leader>gm', package.loaded.gitsigns.blame_line, { desc = '[G]it [B]lame Line' })
+vim.keymap.set('n', '<leader>gd', '<cmd>Git difftool<cr>', { desc = '[G]it [D]iff All Changes (Ctrl+j/k)' })
+vim.keymap.set('n', '<leader>gD', '<cmd>Gvdiffsplit<cr>', { desc = '[G]it [D]iff Current File' })
 
 vim.keymap.set('n', '<Tab>', '<cmd>bn<CR>', { desc = 'Next Buffer' })
