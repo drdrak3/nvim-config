@@ -1,20 +1,18 @@
-vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
-vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { desc = 'Move Selected Line(s) Down' })
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { desc = 'Move Selected Line(s) Up' })
 
-vim.keymap.set('n', 'gJ', 'mzJ`z')
-vim.keymap.set('n', '<C-d>', '<C-d>zz')
-vim.keymap.set('n', '<C-u>', '<C-u>zz')
-vim.keymap.set('n', '<PageDown>', '<C-d>zz')
-vim.keymap.set('n', '<PageUp>', '<C-u>zz')
-vim.keymap.set('n', 'n', 'nzzzv')
-vim.keymap.set('n', 'N', 'Nzzzv')
+vim.keymap.set('n', 'gJ', 'mzJ`z', { desc = 'Join Lines' })
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll Down' })
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll Up' })
+vim.keymap.set('n', '<PageDown>', '<C-d>zz', { desc = 'Scroll Down' })
+vim.keymap.set('n', '<PageUp>', '<C-u>zz', { desc = 'Scroll Up' })
+vim.keymap.set('n', 'n', 'nzzzv', { desc = 'Next Search Result' })
+vim.keymap.set('n', 'N', 'Nzzzv', { desc = 'Previous Search Result' })
 
--- paste over visual selection while keeping existing clipboard
-vim.keymap.set('x', '<leader>p', [["_dP]])
--- delete selection while keeping existing clipboard
+vim.keymap.set('x', '<leader>p', [["_dP]], { desc = '[P]aste (Keep Clipboard)' })
 vim.keymap.set('v', '<leader>d', [["_d]], { desc = '[D]elete (Keep Clipboard)' })
 
-vim.keymap.set('n', 'Q', '<nop>')
+vim.keymap.set('n', 'Q', '<nop>', { desc = 'Disable Ex Mode' })
 vim.keymap.set('n', '<leader>bf', vim.lsp.buf.format, { desc = '[B]uffer [F]ormat' })
 
 vim.keymap.set('n', '<C-f>', '<cmd>cclose<CR>')
@@ -32,7 +30,7 @@ vim.keymap.set(
 vim.keymap.set('n', '<leader>fx', '<cmd>!chmod +x %<CR>', { silent = true, desc = '[F]ile e[X]ecutable' })
 vim.keymap.set('n', '<leader>fd', '<cmd>!rm -rf %<CR>bd<CR>', { silent = true, desc = '[F]ile [D]elete' })
 
-vim.keymap.set({ 'n', 'v', 't' }, '<C-q>', '<cmd>confirm qa<cr>', {})
+vim.keymap.set({ 'n', 'v', 't' }, '<C-q>', '<cmd>confirm qa<cr>', { desc = '[Q]uit All' })
 vim.keymap.set('n', '<leader>bc', function()
   vim.cmd('set bufhidden=delete')
   local bufid = vim.api.nvim_get_current_buf()
@@ -53,3 +51,4 @@ vim.keymap.set('n', '<leader>gd', '<cmd>Git difftool<cr>', { desc = '[G]it [D]if
 vim.keymap.set('n', '<leader>gD', '<cmd>Gvdiffsplit<cr>', { desc = '[G]it [D]iff Current File' })
 
 vim.keymap.set('n', '<Tab>', '<cmd>bn<CR>', { desc = 'Next Buffer' })
+vim.keymap.set('n', '<S-Tab>', '<cmd>bp<CR>', { desc = 'Previous Buffer' })
