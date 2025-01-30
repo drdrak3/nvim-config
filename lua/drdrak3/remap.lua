@@ -1,7 +1,7 @@
 vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
 vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
 
-vim.keymap.set('n', 'J', 'mzJ`z')
+vim.keymap.set('n', 'gJ', 'mzJ`z')
 vim.keymap.set('n', '<C-d>', '<C-d>zz')
 vim.keymap.set('n', '<C-u>', '<C-u>zz')
 vim.keymap.set('n', '<PageDown>', '<C-d>zz')
@@ -30,6 +30,7 @@ vim.keymap.set(
   { desc = '[R]eplace Word Under Cur[S]or' }
 )
 vim.keymap.set('n', '<leader>fx', '<cmd>!chmod +x %<CR>', { silent = true, desc = '[F]ile e[X]ecutable' })
+vim.keymap.set('n', '<leader>fd', '<cmd>!rm -rf %<CR>bd<CR>', { silent = true, desc = '[F]ile [D]elete' })
 
 vim.keymap.set({ 'n', 'v', 't' }, '<C-q>', '<cmd>confirm qa<cr>', {})
 vim.keymap.set('n', '<leader>bc', function()
