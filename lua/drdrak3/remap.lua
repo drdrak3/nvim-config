@@ -52,3 +52,25 @@ vim.keymap.set('n', '<leader>gD', '<cmd>Gvdiffsplit<cr>', { desc = '[G]it [D]iff
 
 vim.keymap.set('n', '<Tab>', '<cmd>bn<CR>', { desc = 'Next Buffer' })
 vim.keymap.set('n', '<S-Tab>', '<cmd>bp<CR>', { desc = 'Previous Buffer' })
+
+vim.keymap.set('n', '<leader>ac', function()
+  require('snacks').terminal.toggle('claude', {
+    win = {
+      position = 'float',
+      width = 0.85,
+      height = 0.85,
+      border = 'rounded',
+    },
+  })
+end, { desc = '[A]I [C]laude' })
+
+vim.keymap.set('n', '<leader>gl', function()
+  require('snacks').terminal.toggle('lazygit', {
+    win = {
+      position = 'float',
+      width = 0.85,
+      height = 0.85,
+      border = 'rounded',
+    },
+  })
+end, { desc = '[G]it [L]azyGit' })
