@@ -90,5 +90,39 @@ return {
     })
 
     vim.keymap.set('n', '<leader>ft', '<cmd>NvimTreeToggle<cr>', { desc = '[F]ile [T]ree' })
+
+    -- Prevent nvim-tree from being the only window open
+    vim.api.nvim_create_autocmd('BufEnter', {
+      nested = true,
+      callback = function()
+        local api = require('nvim-tree.api')
+        if #vim.api.nvim_list_wins() == 1 and api.tree.is_tree_buf() then
+          vim.defer_fn(function()
+            api.tree.toggle({ find_file = true, focus = true })
+
+            -- Find the most recently used listed buffer
+            local bufs = vim.fn.getbufinfo({ buflisted = 1 })
+            local current = vim.api.nvim_get_current_buf()
+
+            -- Filter out current buffer and sort by lastused (most recent first)
+            local valid_bufs = vim.tbl_filter(function(b)
+              return b.bufnr ~= current and b.hidden == 0 or b.loaded == 1
+            end, bufs)
+
+            table.sort(valid_bufs, function(a, b)
+              return (a.lastused or 0) > (b.lastused or 0)
+            end)
+
+            if #valid_bufs > 0 then
+              vim.cmd('buffer ' .. valid_bufs[1].bufnr)
+            else
+              vim.cmd('enew')
+            end
+
+            api.tree.toggle({ find_file = true, focus = false })
+          end, 0)
+        end
+      end,
+    })
   end,
 }
