@@ -546,7 +546,7 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        -- ts_ls = {},  -- Disabled in favor of typescript-tools.nvim
         --
 
         lua_ls = {
@@ -599,6 +599,13 @@ require('lazy').setup({
     end,
   },
 
+  { -- TypeScript tools (better than ts_ls)
+    'pmizio/typescript-tools.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+    ft = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' },
+    opts = {},
+  },
+
   { -- Autoformat
     'stevearc/conform.nvim',
     event = { 'BufWritePre' },
@@ -633,6 +640,10 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        typescript = { 'prettier' },
+        typescriptreact = { 'prettier' },
+        javascript = { 'prettier' },
+        javascriptreact = { 'prettier' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
