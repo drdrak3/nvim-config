@@ -1,0 +1,10 @@
+export PATH="$HOME/.local/bin:$PATH"
+
+alias vim="nvim"
+alias dc="docker compose"
+alias kc="kubectl"
+
+# Less used but still useful
+alias dphp="docker compose exec phpfpm php"
+alias dphpx="docker compose exec phpfpm php -dxdebug.start_with_request=yes"
+
