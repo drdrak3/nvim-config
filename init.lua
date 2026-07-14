@@ -86,7 +86,6 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -108,8 +107,8 @@ vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 --  See `:help wincmd` for a list of all window commands
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- <C-j>/<C-k> are quickfix prev/next (see lua/drdrak3/remap.lua); window
+-- down/up nav is on <leader>wj/<leader>wk to avoid the old collision (D14).
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -122,6 +121,59 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
     vim.highlight.on_yank()
+  end,
+})
+
+-- Recent files: a global MRU list (all files, across every project, persisted
+-- across restarts) backing the <leader>so picker. This is distinct from session
+-- restore (which reopens a branch's buffers). Persisted via JSON, and saved
+-- CONTINUOUSLY (debounced) rather than on VimLeavePre, which never fires when the
+-- terminal is closed with a signal (SIGHUP) -- the reason it used to come back empty.
+local _recent_files_path = vim.fn.stdpath('state') .. '/recent_files.json'
+
+local function _load_recent_files()
+  local ok, lines = pcall(vim.fn.readfile, _recent_files_path)
+  if not (ok and lines and lines[1]) then return {} end
+  local ok2, t = pcall(vim.json.decode, lines[1])
+  return (ok2 and type(t) == 'table') and t or {}
+end
+
+local function _save_recent_files(files)
+  local list = {}
+  for f, t in pairs(files) do
+    if vim.fn.filereadable(f) == 1 then
+      table.insert(list, { f = f, t = t })
+    end
+  end
+  table.sort(list, function(a, b) return a.t > b.t end)
+  local keep = {}
+  for i = 1, math.min(100, #list) do
+    keep[list[i].f] = list[i].t
+  end
+  pcall(vim.fn.writefile, { vim.json.encode(keep) }, _recent_files_path)
+end
+
+_G._session_files = _load_recent_files()
+
+local _rf_timer
+local function _schedule_recent_save()
+  _rf_timer = _rf_timer or (vim.uv or vim.loop).new_timer()
+  _rf_timer:stop()
+  _rf_timer:start(1000, 0, function()
+    vim.schedule(function() _save_recent_files(_G._session_files) end)
+  end)
+end
+
+_G._visit_counter = 0
+vim.api.nvim_create_autocmd('BufEnter', {
+  group = vim.api.nvim_create_augroup('kickstart-session-files', { clear = true }),
+  callback = function(ev)
+    local name = vim.api.nvim_buf_get_name(ev.buf)
+    if name ~= '' and vim.bo[ev.buf].buftype == '' and vim.fn.filereadable(name) == 1 then
+      _G._visit_counter = _G._visit_counter + 1
+      _G._session_files[name] = os.time() * 10000 + _G._visit_counter
+      _schedule_recent_save()
+    end
   end,
 })
 
@@ -310,15 +362,25 @@ require('lazy').setup({
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup({
-        -- You can put your default mappings / updates / etc. in here
-        --  All the info you're looking for is in `:help telescope.setup()`
-        --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
-        -- pickers = {}
+        defaults = {
+          prompt_prefix = '   ',
+          selection_caret = '  ',
+          sorting_strategy = 'ascending',
+          layout_strategy = 'horizontal',
+          layout_config = {
+            horizontal = {
+              prompt_position = 'top',
+              preview_width = 0.55,
+              results_width = 0.8,
+            },
+            width = 0.87,
+            height = 0.80,
+            preview_cutoff = 120,
+          },
+          preview = {
+            treesitter = false,
+          },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -339,7 +401,34 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.live_grep, { desc = '[S]earch [W]ord by Grep' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>so', builtin.oldfiles, { desc = '[S]earch Recently [O]pened Files' })
+      vim.keymap.set('n', '<leader>so', function()
+        local pickers = require('telescope.pickers')
+        local finders = require('telescope.finders')
+        local conf = require('telescope.config').values
+        local make_entry = require('telescope.make_entry')
+        local results = {}
+        local seen = {}
+
+        -- Session files first (most recently visited at top, including current buffer)
+        local sorted = {}
+        for f, t in pairs(_G._session_files or {}) do
+          table.insert(sorted, { f = f, t = t })
+        end
+        table.sort(sorted, function(a, b) return a.t > b.t end)
+        for _, entry in ipairs(sorted) do
+          if not seen[entry.f] then
+            seen[entry.f] = true
+            table.insert(results, entry.f)
+          end
+        end
+
+        pickers.new({}, {
+          prompt_title = 'Recent Files',
+          finder = finders.new_table({ results = results, entry_maker = make_entry.gen_from_file({}) }),
+          sorter = conf.generic_sorter({}),
+          previewer = conf.file_previewer({}),
+        }):find()
+      end, { desc = '[S]earch Recently [O]pened Files' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
@@ -386,7 +475,7 @@ require('lazy').setup({
 
       -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
       -- used for completion, annotations and signatures of Neovim apis
-      { 'folke/neodev.nvim', opts = {} },
+      { 'folke/lazydev.nvim', ft = 'lua', opts = {} },
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -474,7 +563,7 @@ require('lazy').setup({
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
@@ -501,7 +590,7 @@ require('lazy').setup({
           -- code, if the language server you are using supports them
           --
           -- This may be unwanted, since they displace some of your code
-          if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
             map('<leader>th', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
             end, '[T]oggle Inlay [H]ints')
@@ -772,40 +861,19 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    main = 'nvim-treesitter.configs', -- Sets main module to use for opts
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
-    opts = {
-      ensure_installed = {
-        'bash',
-        'c',
-        'diff',
-        'html',
-        'lua',
-        'luadoc',
-        'markdown',
-        'markdown_inline',
-        'query',
-        'vim',
-        'vimdoc',
-        'phpdoc',
-      },
-      -- Autoinstall languages that are not installed
-      auto_install = true,
-      highlight = {
-        enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
-      },
-      indent = { enable = true, disable = { 'ruby' } },
-    },
-    -- There are additional nvim-treesitter modules that you can use to interact
-    -- with nvim-treesitter. You should go explore a few and see what interests you:
-    --
-    --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-    --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-    --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    lazy = false,
+    config = function()
+      require('nvim-treesitter').install({
+        'bash', 'c', 'diff', 'html', 'lua', 'luadoc',
+        'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc',
+      })
+
+      vim.api.nvim_create_autocmd('FileType', {
+        callback = function()
+          pcall(vim.treesitter.start)
+        end,
+      })
+    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the

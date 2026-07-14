@@ -183,9 +183,7 @@ return {
       -- You'll need to check that you have the required things installed
       -- online, please don't ask me how to install them :)
       ensure_installed = {
-        -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
-        'php-debug-adapter',
       },
     })
 
@@ -282,14 +280,6 @@ return {
           local frame = frames[i]
           if frame.source and frame.source.path then
             local path = frame.source.path
-            -- Handle path mappings for Docker/remote debugging
-            for remote, local_path in pairs(dap.configurations.php[1].pathMappings or {}) do
-              if path:find(remote, 1, true) == 1 then
-                path = path:gsub('^' .. vim.pesc(remote), local_path)
-                break
-              end
-            end
-
             local bufnr = vim.fn.bufnr(path)
             if bufnr == -1 then
               -- Try to load the buffer if it exists on disk
@@ -355,23 +345,43 @@ return {
       },
     })
 
-    -- PHP/Xdebug configuration for Docker
-    dap.adapters.php = {
-      type = 'executable',
-      command = 'node',
-      args = { vim.fn.stdpath('data') .. '/mason/packages/php-debug-adapter/extension/out/phpDebug.js' },
-    }
-
-    dap.configurations.php = {
-      {
-        type = 'php',
-        request = 'launch',
-        name = 'Listen for Xdebug (Rosterfy2 Docker)',
-        port = 9003,
-        pathMappings = {
-          ['/var/www'] = vim.fn.expand('~/Projects/Rosterfy2'),
+    -- Node.js / TypeScript (js-debug-adapter)
+    dap.adapters['pwa-node'] = {
+      type = 'server',
+      host = 'localhost',
+      port = '${port}',
+      executable = {
+        command = 'node',
+        args = {
+          vim.fn.stdpath('data') .. '/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js',
+          '${port}',
         },
       },
     }
+
+    local backend_root = vim.fn.expand('~/Projects/backend/backend')
+    local js_attach = {
+      type = 'pwa-node',
+      request = 'attach',
+      name = 'Attach to k8s backend (9229)',
+      address = 'localhost',
+      port = 9231,
+      localRoot = backend_root,
+      remoteRoot = '/node',
+      sourceMaps = true,
+      skipFiles = { '<node_internals>/**', '**/node_modules/**' },
+      sourceMapPathOverrides = {
+        -- Sources resolve relative to container root /node/, map to local monorepo root
+        ['file:///node/*'] = backend_root .. '/*',
+        -- Fallback: raw relative paths from esbuild source map
+        ['../../*'] = backend_root .. '/*',
+      },
+    }
+
+    for _, lang in ipairs({ 'typescript', 'javascript' }) do
+      dap.configurations[lang] = dap.configurations[lang] or {}
+      table.insert(dap.configurations[lang], js_attach)
+    end
+
   end,
 }
