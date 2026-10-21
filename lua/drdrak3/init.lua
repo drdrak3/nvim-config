@@ -55,4 +55,5 @@ vim.opt.colorcolumn = '120'
 vim.opt.fillchars = { eob = ' ' }
 
 require 'drdrak3/remap'
-require('drdrak3.session').setup()
+require('drdrak3.project').setup()
+require('drdrak3.claude').setup()

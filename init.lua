@@ -95,6 +95,12 @@ vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
+-- Single-keystroke escape from terminal mode that (unlike <Esc>) never leaks
+-- into the running TUI. Works in all terminals, including Claude and lazygit,
+-- since nvim intercepts <C-w> before the program sees it. <C-q> is unmapped in
+-- terminal mode so a fat-finger next door can't quit nvim.
+vim.keymap.set('t', '<C-w>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
 -- TIP: Disable arrow keys in normal mode
 vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
@@ -139,8 +145,19 @@ local function _load_recent_files()
 end
 
 local function _save_recent_files(files)
-  local list = {}
+  -- Merge with whatever is on disk first, so a second nvim instance's entries
+  -- aren't dropped (the file is a shared global MRU). Most-recent visit wins per
+  -- file. A rare interleaved write can still lose an entry, but the next save
+  -- re-merges from memory, so it self-heals.
+  local merged = _load_recent_files()
   for f, t in pairs(files) do
+    if not merged[f] or t > merged[f] then
+      merged[f] = t
+    end
+  end
+
+  local list = {}
+  for f, t in pairs(merged) do
     if vim.fn.filereadable(f) == 1 then
       table.insert(list, { f = f, t = t })
     end
@@ -151,6 +168,9 @@ local function _save_recent_files(files)
     keep[list[i].f] = list[i].t
   end
   pcall(vim.fn.writefile, { vim.json.encode(keep) }, _recent_files_path)
+  -- Reflect the merged result back into memory so this instance's picker also
+  -- surfaces files opened in the other instance.
+  _G._session_files = keep
 end
 
 _G._session_files = _load_recent_files()

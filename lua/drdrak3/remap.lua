@@ -54,23 +54,19 @@ vim.keymap.set('n', '<leader>fd', function()
   end
 end, { desc = '[F]ile [D]elete' })
 
-vim.keymap.set({ 'n', 'v', 't' }, '<C-q>', '<cmd>confirm qa<cr>', { desc = '[Q]uit All' })
+-- Not mapped in terminal mode ('t'): <C-q> sits next to <C-w> (the terminal
+-- escape), and a fat-finger there should never quit all of nvim.
+vim.keymap.set({ 'n', 'v' }, '<C-q>', '<cmd>confirm qa<cr>', { desc = '[Q]uit All' })
 vim.keymap.set('n', '<leader>bc', function()
   -- bufhidden=delete :bdelete's the buffer when it hides: it becomes UNLISTED
-  -- (so mksession won't save it -> no resurrection) but stays VALID, so an
-  -- in-flight LSP documentHighlight response can't crash on an invalid buffer
-  -- id the way a full :bwipeout would.
+  -- but stays VALID, so an in-flight LSP documentHighlight response can't crash
+  -- on an invalid buffer id the way a full :bwipeout would.
   vim.cmd('set bufhidden=delete')
   local bufid = vim.api.nvim_get_current_buf()
   vim.cmd('confirm bp')
   if bufid == vim.api.nvim_get_current_buf() then
     vim.cmd('confirm enew')
   end
-  -- Persist the close immediately so it survives an instant terminal SIGHUP,
-  -- rather than waiting on the debounced continuous save.
-  pcall(function()
-    require('drdrak3.session').save_now()
-  end)
 end, { desc = '[B]uffer [C]lose' })
 vim.keymap.set('n', '<leader>bn', '<cmd>confirm enew<cr>', { desc = '[B]uffer [N]ew' })
 
@@ -89,7 +85,7 @@ vim.keymap.set('n', '<S-Tab>', '<cmd>bp<CR>', { desc = 'Previous Buffer' })
 vim.api.nvim_create_autocmd('TermClose', {
   group = vim.api.nvim_create_augroup('claude-term-close', { clear = true }),
   callback = function(args)
-    if vim.bo[args.buf].filetype == 'claude' then
+    if vim.api.nvim_buf_is_valid(args.buf) and vim.bo[args.buf].filetype == 'claude' then
       vim.schedule(function()
         if vim.api.nvim_buf_is_valid(args.buf) then
           vim.api.nvim_buf_delete(args.buf, { force = true })
@@ -100,9 +96,7 @@ vim.api.nvim_create_autocmd('TermClose', {
 })
 
 vim.keymap.set('n', '<leader>ac', function()
-  vim.cmd('terminal claude')
-  vim.bo.filetype = 'claude'
-  vim.cmd('startinsert')
+  require('drdrak3.claude').new_terminal()
 end, { desc = '[A]I [C]laude' })
 
 vim.keymap.set('n', '<leader>gl', function()
